@@ -181,6 +181,36 @@ export class Layer extends Record({
   }
 }
 
+export class Group extends Record({
+  id: "",
+  name: "",
+  centerX: 0,
+  centerY: 0,
+  vertices: new Map(),
+  lines: new Map(),
+  holes: new Map(),
+  areas: new Map(),
+  items: new Map(),
+  groups: new Map(),
+  translation: {x: 0, y: 0, z: 0},
+  rotation: 0,
+  scale: {x: 1, y: 1, z: 1},
+  type: "",
+  opacity: 1,
+  visible: true,
+}, 'Group') {
+  constructor(json = {}) {
+    super({
+      ...json,
+      vertices: safeLoadMapList(json.vertices, Vertex),
+      lines: safeLoadMapList(json.lines, Line),
+      holes: safeLoadMapList(json.holes, Hole),
+      areas: safeLoadMapList(json.areas, Area),
+      items: safeLoadMapList(json.items, Item),
+    });
+  }
+}
+
 
 export const DefaultLayers = new Map({
   'layer-1': new Layer({id: 'layer-1', name: 'default'})
