@@ -1,4 +1,4 @@
-In order to enable hierarchical modeling, we need to introduce the concept of *group*. The basical idea is to wrap all objects inside these new entities that will consent following transformations: *scales*, *translations* and *rotations*. Following this idea, a layer will be defined as a special group that will define only a translation on the z-axis. The new application state will be the following:
+In order to enable hierarchical modeling, we need to introduce the concept of *group*. The basic idea is to wrap all objects inside these new entities that will consent following transformations: *scales*, *translations* and *rotations*. Following this idea, a *layer* will be defined as a special group that will define only a translation on the z-axis. The new application state will be the following:
 
 ```
 mode: "String"
@@ -8,11 +8,13 @@ scene: {unit:"cm",
 	width:number,
 	height:number,
 	meta:{},
-	vertices:{},
-	lines:{},
-	holes:{},
-	areas:{},
-	items:{},
+	elements:{
+		vertices:{},
+		lines:{},
+		holes:{},
+		areas:{},
+		items:{},
+	}
 	selected:{},
 	groups:{}
        }
@@ -27,7 +29,7 @@ misc:{}
 
 ```
 
-Every group has the following structure:
+A group has the following structure:
 
 ```
 {id: "String",
@@ -46,11 +48,12 @@ type: "Layer, etc...",
 }
 ```
 
-All these groups can be implemented in svg as *<g> tags* and in threejs with *the Object3D class*. We will also need utility functions to convert the relative coordinates of every object in world coordinates and vice versa.
+Groups can be implemented in svg as `<g>` tags and in three.js exploiting `Object3D` class features. We will also need utility functions to convert the relative coordinates of every object in world coordinates and vice versa.
 
 From the UI point of view, a user can do the following actions:
 * Select multiple objects and groups
 * Group/Ungroup them
 * Transform group objects
-* Select multiple objects with a window
-* View currently selected objects in a group
+* Select multiple objects by a drag and drop windowing selection interactions
+
+Currently selected objects in a group, can be visualized in the sidebar
