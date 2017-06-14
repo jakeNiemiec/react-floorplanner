@@ -1,5 +1,5 @@
 import {Record, List, Map, fromJS} from 'immutable';
-import {MODE_IDLE} from './constants';
+import {GROUP_LAYER, MODE_IDLE} from './constants';
 
 let safeLoadMapList = (mapList, Model, defaultMap) => {
   return mapList
@@ -154,23 +154,6 @@ export class Item extends Record({
   }
 }
 
-export class Layer extends Record({
-  id: "",
-  altitude: 0,
-  order: 0,
-  opacity: 1,
-  name: "",
-  visible: true,
-
-}, 'Layer') {
-  constructor(json = {}) {
-    super({
-      ...json,
-      selected: new ElementsSet(json.selected)
-    });
-  }
-}
-
 export class Group extends Record({
   id: "",
   name: "",
@@ -201,6 +184,14 @@ export class Group extends Record({
   }
 }
 
+export class Layer extends Group {
+  constructor(json = {}) {
+    super({
+      ...json,
+      type: GROUP_LAYER
+    });
+  }
+}
 
 export const DefaultLayers = new Map({
   'layer-1': new Layer({id: 'layer-1', name: 'default'})
@@ -235,8 +226,8 @@ export class Scene extends Record({
   height: 2000,
   elements: new ElementsMap(),
   selected: new ElementsSet(),
+  groups: new Map(),
   meta: new Map()   //additional info
-
 }, 'Scene') {
   constructor(json = {}) {
     let layers = safeLoadMapList(json.layers, Layer, DefaultLayers);
@@ -245,7 +236,8 @@ export class Scene extends Record({
       guides: safeLoadMapList(json.guides, Guide, DefaultGuides),
       layers,
       selectedLayer: layers.first().id,
-      meta: json.meta ? fromJS(json.meta) : new Map()
+      meta: json.meta ? fromJS(json.meta) : new Map(),
+      selected: new ElementsSet(json.selected)
     })
   }
 }

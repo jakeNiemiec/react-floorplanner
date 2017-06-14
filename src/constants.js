@@ -197,3 +197,5 @@ export const UNITS_LENGTH = [
 ];
 
 export const EPSILON = 1e-6;
+
+export const GROUP_LAYER = 'GROUP_LAYER';
