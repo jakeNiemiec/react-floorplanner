@@ -10,7 +10,7 @@ import {
   MODE_IDLE, MODE_2D_ZOOM_IN, MODE_2D_ZOOM_OUT, MODE_2D_PAN, MODE_3D_VIEW, MODE_3D_FIRST_PERSON,
   MODE_WAITING_DRAWING_LINE, MODE_DRAWING_LINE, MODE_DRAWING_HOLE, MODE_DRAWING_ITEM, MODE_DRAGGING_LINE,
   MODE_DRAGGING_VERTEX, MODE_DRAGGING_ITEM, MODE_DRAGGING_HOLE, MODE_FITTING_IMAGE, MODE_UPLOADING_IMAGE,
-  MODE_ROTATING_ITEM, MODE_CONFIGURING_LAYER
+  MODE_ROTATING_ITEM, MODE_CONFIGURING_LAYER, GROUP_LAYER
 } from '../../constants';
 
 const STYLE_ADD_WRAPPER = {
@@ -59,7 +59,9 @@ export default function PanelLayers({state: {scene, mode}}, {sceneActions, trans
     event.stopPropagation();
   };
 
-  let isLastLayer = scene.layers.size === 1;
+  let isLastLayer = scene.groups.entrySeq()
+      .filter(([groupID, group]) => !group.type === GROUP_LAYER).size === 1;
+  // let isLastLayer = scene.layers.size === 1;
 
   return (
     <Panel name={translator.t("Layers")}>
@@ -72,7 +74,7 @@ export default function PanelLayers({state: {scene, mode}}, {sceneActions, trans
         </tr>
         </thead>
         <tbody>
-        {scene.layers.entrySeq().map(([layerID, layer]) => {
+        {scene.groups.entrySeq().map(([layerID, layer]) => {
 
           let selectClick = e => sceneActions.selectLayer(layerID);
           let configureClick = e => sceneActions.openLayerConfigurator(layer.id);

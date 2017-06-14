@@ -228,7 +228,7 @@ export class Scene extends Record({
   meta: new Map()   //additional info
 }, 'Scene') {
   constructor(json = {}) {
-    let groups = safeLoadMapList(json.layers, Layer, DefaultLayers);
+    let groups = safeLoadMapList(json.groups, Group, DefaultLayers);
     super({
       ...json,
       guides: safeLoadMapList(json.guides, Guide, DefaultGuides),
