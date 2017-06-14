@@ -4,17 +4,18 @@ import Group from './group';
 import Guides from './guides/guides';
 export default function Scene({scene, catalog}) {
 
-  let {height, groups} = scene;
+  let {height, groups: layers} = scene;
   let selectedLayer = scene.groups.get(scene.selectedLayer);
 
+  // At the top level we only have Layers!! (Moreover other groups cannot contain layers inside them)
   return (
     <g>
       <Guides scene={scene}/>
 
       <g style={{pointerEvents: "none"}}>
-        {groups.entrySeq()
-          .filter(([groupID, group]) => !group.selected && group.visible)
-          .map(([groupID, group]) => <Group key={groupID} group={group} scene={scene} catalog={catalog}/>)}
+        {layers.entrySeq()
+          .filter(([layerID, layer]) => !layer.selected && layer.visible)
+          .map(([layerID, layer]) => <Group key={layerID} group={layer} scene={scene} catalog={catalog}/>)}
       </g>
 
       <Group key={selectedLayer.id} group={selectedLayer} scene={scene} catalog={catalog}/>
