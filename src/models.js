@@ -197,7 +197,6 @@ export const DefaultLayers = new Map({
   'layer-1': new Layer({id: 'layer-1', name: 'default'})
 });
 
-
 export class ElementsMap extends Record({
   vertices: new Map(),
   lines: new Map(),
@@ -219,7 +218,6 @@ export class ElementsMap extends Record({
 
 export class Scene extends Record({
   unit: "cm",
-  layers: new Map(),
   guides: new Map(),
   selectedLayer: null,
   width: 3000,
@@ -230,12 +228,12 @@ export class Scene extends Record({
   meta: new Map()   //additional info
 }, 'Scene') {
   constructor(json = {}) {
-    let layers = safeLoadMapList(json.layers, Layer, DefaultLayers);
+    let groups = safeLoadMapList(json.layers, Layer, DefaultLayers);
     super({
       ...json,
       guides: safeLoadMapList(json.guides, Guide, DefaultGuides),
-      layers,
-      selectedLayer: layers.first().id,
+      groups,
+      selectedLayer: groups.first().id,
       meta: json.meta ? fromJS(json.meta) : new Map(),
       selected: new ElementsSet(json.selected)
     })

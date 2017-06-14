@@ -1,23 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Layer from './layer';
+import Group from './group';
 import Guides from './guides/guides';
 export default function Scene({scene, catalog}) {
 
-  let {height, layers} = scene;
-  let selectedLayer = scene.layers.get(scene.selectedLayer);
+  let {height, groups} = scene;
+  let selectedLayer = scene.groups.get(scene.selectedLayer);
 
   return (
     <g>
       <Guides scene={scene}/>
 
       <g style={{pointerEvents: "none"}}>
-        {layers.entrySeq()
-          .filter(([layerID, layer]) => layerID !== scene.selectedLayer && layer.visible)
-          .map(([layerID, layer]) => <Layer key={layerID} layer={layer} scene={scene} catalog={catalog}/>)}
+        {groups.entrySeq()
+          .filter(([groupID, group]) => !group.selected && group.visible)
+          .map(([groupID, group]) => <Group key={groupID} group={group} scene={scene} catalog={catalog}/>)}
       </g>
 
-      <Layer key={selectedLayer.id} layer={selectedLayer} scene={scene} catalog={catalog}/>
+      <Group key={selectedLayer.id} group={selectedLayer} scene={scene} catalog={catalog}/>
     </g>
   );
 }
