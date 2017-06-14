@@ -161,21 +161,11 @@ export class Layer extends Record({
   opacity: 1,
   name: "",
   visible: true,
-  vertices: new Map(),
-  lines: new Map(),
-  holes: new Map(),
-  areas: new Map(),
-  items: new Map(),
-  selected: new ElementsSet(),
+
 }, 'Layer') {
   constructor(json = {}) {
     super({
       ...json,
-      vertices: safeLoadMapList(json.vertices, Vertex),
-      lines: safeLoadMapList(json.lines, Line),
-      holes: safeLoadMapList(json.holes, Hole),
-      areas: safeLoadMapList(json.areas, Area),
-      items: safeLoadMapList(json.items, Item),
       selected: new ElementsSet(json.selected)
     });
   }
@@ -217,6 +207,25 @@ export const DefaultLayers = new Map({
 });
 
 
+export class ElementsMap extends Record({
+  vertices: new Map(),
+  lines: new Map(),
+  holes: new Map(),
+  areas: new Map(),
+  items: new Map(),
+}, 'ElementsMap') {
+  constructor(json = {}) {
+    super({
+      ...json,
+      vertices: safeLoadMapList(json.vertices, Vertex),
+      lines: safeLoadMapList(json.lines, Line),
+      holes: safeLoadMapList(json.holes, Hole),
+      areas: safeLoadMapList(json.areas, Area),
+      items: safeLoadMapList(json.items, Item),
+    });
+  }
+}
+
 export class Scene extends Record({
   unit: "cm",
   layers: new Map(),
@@ -224,7 +233,8 @@ export class Scene extends Record({
   selectedLayer: null,
   width: 3000,
   height: 2000,
-
+  elements: new ElementsMap(),
+  selected: new ElementsSet(),
   meta: new Map()   //additional info
 
 }, 'Scene') {
