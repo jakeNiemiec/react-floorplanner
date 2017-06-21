@@ -26,15 +26,7 @@ import {
   removeLine,
   removeHole,
   detectAndUpdateAreas,
-  setProperties as setPropertiesOp,
-  setItemsAttributes as setItemsAttributesOp,
-  setLinesAttributes as setLinesAttributesOp,
-  setHolesAttributes as setHolesAttributesOp,
-  select,
-  unselect,
-  unselectAll as unselectAllOp,
   removeItem,
-  loadLayerFromJSON,
   setPropertiesOnSelected,
   setAttributesOnSelected
 } from '../utils/layer-operations';
@@ -175,14 +167,30 @@ function remove(state) {
   let scene = state.scene;
   let catalog = state.catalog;
 
-  scene = scene.updateIn(['layers', scene.selectedLayer], layer => layer.withMutations(layer => {
-    let {lines: selectedLines, holes: selectedHoles, items: selectedItems} = layer.selected;
-    unselectAllOp(layer);
-    selectedLines.forEach(lineID => removeLine(layer, lineID));
-    selectedHoles.forEach(holeID => removeHole(layer, holeID));
-    selectedItems.forEach(itemID => removeItem(layer, itemID));
-    detectAndUpdateAreas(layer, catalog);
-  }));
+  scene = scene.withMutations(scene => {
+    let {lines: selectedLines, holes: selectedHoles, items: selectedItems} = scene.selected;
+
+    // First unselect all elements
+    scene.update('elements', elements => {
+      return unselectAllElements(elements);
+    });
+
+    scene.update('groups', groups => {
+      groups.forEach(group => {
+        group.set('selected', false);
+      });
+
+      return groups;
+    });
+
+    scene.update('elements', elements => {
+      selectedLines.forEach(lineID => removeLine(elements, lineID));
+      selectedHoles.forEach(holeID => removeHole(elements, holeID));
+      selectedItems.forEach(itemID => removeItem(elements, itemID));
+      detectAndUpdateAreas(elements, catalog);
+    });
+
+  });
 
   return state.merge({
     scene,
