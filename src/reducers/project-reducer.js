@@ -221,8 +221,21 @@ export function rollback(state) {
   if (sceneHistory.isEmpty()) return state;
 
   let scene = sceneHistory
-    .last()
-    .update('layers', layer => layer.map(unselectAllOp));
+    .last();
+
+  scene = scene.withMutations(scene => {
+    scene.update('elements', elements => {
+      return unselectAllElements(elements);
+    });
+
+    scene.update('groups', groups => {
+      groups.forEach(group => {
+        group.set('selected', false);
+      });
+
+      return groups;
+    });
+  });
 
   return state.merge({
     mode: MODE_IDLE,
