@@ -35,6 +35,7 @@ A group has the following structure:
 {id: "String",
 centerX: Number,
 centerY: Number,
+selected: Boolean,
 vertices: {},
 lines: {},
 holes:{},
