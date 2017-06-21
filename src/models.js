@@ -204,6 +204,7 @@ export class ElementsMap extends Record({
   holes: new Map(),
   areas: new Map(),
   items: new Map(),
+  selected: new ElementsSet(),
 }, 'ElementsMap') {
   constructor(json = {}) {
     super({
@@ -213,6 +214,7 @@ export class ElementsMap extends Record({
       holes: safeLoadMapList(json.holes, Hole),
       areas: safeLoadMapList(json.areas, Area),
       items: safeLoadMapList(json.items, Item),
+      selected: new ElementsSet(json.selected)
     });
   }
 }
@@ -224,7 +226,6 @@ export class Scene extends Record({
   width: 3000,
   height: 2000,
   elements: new ElementsMap(),
-  selected: new ElementsSet(),
   groups: new Map(),
   meta: new Map()   //additional info
 }, 'Scene') {
@@ -233,12 +234,10 @@ export class Scene extends Record({
     super({
       ...json,
       elements: new ElementsMap(json.elements),
-      selected: new ElementsSet(json.selected),
       guides: safeLoadMapList(json.guides, Guide, DefaultGuides),
       groups,
       selectedLayer: groups.first().id,
       meta: json.meta ? fromJS(json.meta) : new Map(),
-      selected: new ElementsSet(json.selected)
     })
   }
 }

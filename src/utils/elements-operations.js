@@ -1,3 +1,5 @@
+import {ElementsSet} from '../models';
+
 export function unselectAllElements(elements) {
   return elements.withMutations(elements => {
     unselectAllVertices(elements);
@@ -5,6 +7,7 @@ export function unselectAllElements(elements) {
     unselectAllHoles(elements);
     unselectAllAreas(elements);
     unselectAllItems(elements);
+    elements.set('selected', new ElementsSet())
   });
 
 }
@@ -12,7 +15,7 @@ export function unselectAllElements(elements) {
 export function unselectAllVertices(elements) {
   return elements.withMutations(elements => {
     elements.vertices.forEach(vertex => {
-      vertex.set('selected',false);
+      vertex.set('selected', false);
     });
   });
 }
@@ -20,7 +23,7 @@ export function unselectAllVertices(elements) {
 export function unselectAllLines(elements) {
   return elements.withMutations(elements => {
     elements.lines.forEach(line => {
-      line.set('selected',false);
+      line.set('selected', false);
     });
   });
 }
@@ -28,7 +31,7 @@ export function unselectAllLines(elements) {
 export function unselectAllHoles(elements) {
   return elements.withMutations(elements => {
     elements.holes.forEach(hole => {
-      hole.set('selected',false);
+      hole.set('selected', false);
     });
   });
 }
@@ -36,7 +39,7 @@ export function unselectAllHoles(elements) {
 export function unselectAllAreas(elements) {
   return elements.withMutations(elements => {
     elements.areas.forEach(area => {
-      area.set('selected',false);
+      area.set('selected', false);
     });
   });
 }
@@ -44,7 +47,28 @@ export function unselectAllAreas(elements) {
 export function unselectAllItems(elements) {
   return elements.withMutations(elements => {
     elements.items.forEach(item => {
-      item.set('selected',false);
+      item.set('selected', false);
     });
   });
+}
+
+function unselectElement(elements, prototype, ID) {
+  let ids = elements.getIn(['selected', prototype]);
+  ids = ids.remove(ids.indexOf(ID));
+  let selected = ids.some(key => key === ID);
+  elements.setIn(['selected', prototype], ids);
+  elements.setIn([prototype, ID, 'selected'], selected);
+}
+
+export function removeLine(elements, lineID) {
+
+  let line = elements.getIn(['lines', lineID]);
+  elements = elements.withMutations(elements => {
+    unselectElement(elements, 'lines', lineID);
+    line.holes.forEach(holeID => removeHole(elements, holeID)); // TODO: Implement removeHole
+    elements.deleteIn(['lines', line.id]);
+    line.vertices.forEach(vertexID => removeVertex(elements, vertexID, 'lines', line.id)); // TODO: Implement removeVertex
+  });
+
+  return {elements, line};
 }

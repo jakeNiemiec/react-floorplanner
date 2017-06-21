@@ -14,8 +14,8 @@ scene: {unit:"cm",
 		holes:{},
 		areas:{},
 		items:{},
+		selected:{},
 	}
-	selected:{},
 	groups:{}
        }
 sceneHistory: [{},{}]

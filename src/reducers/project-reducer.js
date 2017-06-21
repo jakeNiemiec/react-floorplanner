@@ -168,7 +168,7 @@ function remove(state) {
   let catalog = state.catalog;
 
   scene = scene.withMutations(scene => {
-    let {lines: selectedLines, holes: selectedHoles, items: selectedItems} = scene.selected;
+    let {lines: selectedLines, holes: selectedHoles, items: selectedItems} = scene.elements.selected;
 
     // First unselect all elements
     scene.update('elements', elements => {
