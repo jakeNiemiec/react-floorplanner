@@ -159,6 +159,7 @@ export class Group extends Record({
   name: "",
   centerX: 0,
   centerY: 0,
+  selected: false,
   vertices: new Map(),
   lines: new Map(),
   holes: new Map(),
@@ -231,6 +232,8 @@ export class Scene extends Record({
     let groups = safeLoadMapList(json.groups, Group, DefaultLayers);
     super({
       ...json,
+      elements: new ElementsMap(json.elements),
+      selected: new ElementsSet(json.selected),
       guides: safeLoadMapList(json.guides, Guide, DefaultGuides),
       groups,
       selectedLayer: groups.first().id,

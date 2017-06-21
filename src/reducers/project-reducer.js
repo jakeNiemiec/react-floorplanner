@@ -39,6 +39,8 @@ import {
   setAttributesOnSelected
 } from '../utils/layer-operations';
 
+import {unselectAllElements} from '../utils/elements-operations';
+
 export default function (state, action) {
 
   switch (action.type) {
@@ -149,7 +151,19 @@ function setHolesAttributes(state, attributes) {
 function unselectAll(state) {
   let scene = state.scene;
 
-  scene = scene.update('layers', layer => layer.map(unselectAllOp));
+  scene = scene.withMutations(scene => {
+    scene.update('elements', elements => {
+      return unselectAllElements(elements);
+    });
+
+    scene.update('groups', groups => {
+      groups.forEach(group => {
+        group.set('selected', false);
+      });
+
+      return groups;
+    });
+  });
 
   return state.merge({
     scene,
