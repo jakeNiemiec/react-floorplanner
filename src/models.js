@@ -161,11 +161,11 @@ export class Group extends Record({
   centerY: 0,
   selected: false,
   vertices: new Map(),
-  lines: new Map(),
-  holes: new Map(),
-  areas: new Map(),
-  items: new Map(),
-  groups: new Map(),
+  lines: new List(),
+  holes: new List(),
+  areas: new List(),
+  items: new List(),
+  groups: new List(),
   translation: {x: 0, y: 0, z: 0},
   rotation: 0,
   scale: {x: 1, y: 1, z: 1},
@@ -176,11 +176,11 @@ export class Group extends Record({
   constructor(json = {}) {
     super({
       ...json,
-      vertices: safeLoadMapList(json.vertices, Vertex),
-      lines: safeLoadMapList(json.lines, Line),
-      holes: safeLoadMapList(json.holes, Hole),
-      areas: safeLoadMapList(json.areas, Area),
-      items: safeLoadMapList(json.items, Item),
+      vertices: new List(json.vertices),
+      lines: new List(json.lines),
+      holes: new List(json.holes),
+      areas: new List(json.areas),
+      items: new List(json.items),
     });
   }
 }
