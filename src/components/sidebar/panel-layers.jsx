@@ -16,8 +16,7 @@ import {
   MODE_IDLE, MODE_2D_ZOOM_IN, MODE_2D_ZOOM_OUT, MODE_2D_PAN, MODE_3D_VIEW, MODE_3D_FIRST_PERSON,
   MODE_WAITING_DRAWING_LINE, MODE_DRAWING_LINE, MODE_DRAWING_HOLE, MODE_DRAWING_ITEM, MODE_DRAGGING_LINE,
   MODE_DRAGGING_VERTEX, MODE_DRAGGING_ITEM, MODE_DRAGGING_HOLE, MODE_FITTING_IMAGE, MODE_UPLOADING_IMAGE,
-  MODE_ROTATING_ITEM, GROUP_LAYER
-
+  MODE_ROTATING_ITEM
 } from '../../constants';
 
 const styleEditButton = {
@@ -81,6 +80,9 @@ export default class PanelLayers extends Component {
   updateLayer(e, layerData) {
     e.stopPropagation();
     let {id, name, opacity, altitude, order} = layerData.toJS();
+
+    altitude = parseInt(altitude);
+
     this.context.sceneActions.setLayerProperties(id, {name, opacity, altitude, order});
     this.setState({layerAddUIVisible: false, editingLayer: null});
   }
@@ -101,9 +103,7 @@ export default class PanelLayers extends Component {
         MODE_DRAGGING_LINE, MODE_DRAGGING_VERTEX, MODE_DRAGGING_ITEM, MODE_DRAGGING_HOLE,
         MODE_ROTATING_ITEM, MODE_UPLOADING_IMAGE, MODE_FITTING_IMAGE].includes(mode)) return null;
 
-    let isLastLayer = scene.groups.entrySeq()
-        .filter(([groupID, group]) => !group.type === GROUP_LAYER).size === 1;
-    //let isLastLayer = scene.layers.size === 1;
+    let isLastLayer = scene.layers.size === 1;
 
     return (
       <Panel name={this.context.translator.t('Layers')}>
@@ -117,7 +117,7 @@ export default class PanelLayers extends Component {
           </thead>
           <tbody>
           {
-            scene.groups.entrySeq().map(([layerID, layer]) => {
+            scene.layers.entrySeq().map(([layerID, layer]) => {
 
               let selectClick = e => this.context.sceneActions.selectLayer(layerID);
               let configureClick = e => this.setState({editingLayer: layer, layerAddUIVisible: true});
