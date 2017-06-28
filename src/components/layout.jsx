@@ -2,6 +2,7 @@ import React from 'react';
 import Toolbar from './toolbar/toolbar';
 import Content from './content';
 import Sidebar from './sidebar/sidebar';
+import FooterBar from './footerbar/footerbar';
 
 export default function ({width, height, ...rest}) {
 
@@ -13,7 +14,8 @@ export default function ({width, height, ...rest}) {
     <div style={{display: "flex", flexFlow: "row nowrap", height}}>
       <Toolbar width={toolbarWidth} height={height} {...rest} />
       <Content width={contentWidth} height={height} {...rest} onWheel={event => event.preventDefault()} />
-      {/*<Sidebar width={sidebarWidth} height={height} {...rest} />*/}
+      <Sidebar width={sidebarWidth} height={height} {...rest} />
+      <FooterBar {...rest}/>
     </div>
   );
 }

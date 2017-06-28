@@ -372,9 +372,11 @@ function addHole(sceneData, planData, layer, holeID, catalog, holesActions) {
       return holesActions.selectHole(layer.id, holeData.id)
     });
 
-    if (!holeData.selected) {
-      applyOpacity(pivot, layer.opacity);
+    let opacity = layer.opacity;
+    if (holeData.selected) {
+      opacity = 1;
     }
+    applyOpacity(pivot, opacity);
 
   });
 }
@@ -412,9 +414,11 @@ function addLine(sceneData, planData, layer, lineID, catalog, linesActions) {
       return linesActions.selectLine(layer.id, line.id);
     });
 
-    if (!line.selected && layer.opacity !== 1) {
-      applyOpacity(pivot, layer.opacity);
+    let opacity = layer.opacity;
+    if (line.selected) {
+      opacity = 1;
     }
+    applyOpacity(pivot, opacity);
 
   });
 }
@@ -439,14 +443,18 @@ function addArea(sceneData, planData, layer, areaID, catalog, areaActions) {
 
     applyInteract(pivot, interactFunction);
 
-    if (!area.selected && layer.opacity !== 1) {
-      applyOpacity(pivot, layer.opacity);
+    let opacity = layer.opacity;
+    if (area.selected) {
+      opacity = 1;
     }
+
+    applyOpacity(pivot, opacity);
 
   });
 }
 
 function addItem(sceneData, planData, layer, itemID, catalog, itemsActions) {
+
   let item = layer.items.get(itemID);
 
   return catalog.getElement(item.type).render3D(item, layer, sceneData).then(item3D => {
@@ -468,9 +476,12 @@ function addItem(sceneData, planData, layer, itemID, catalog, itemsActions) {
       }
     );
 
-    if (!item.selected && layer.opacity !== 1) {
-      applyOpacity(pivot, layer.opacity);
+    let opacity = layer.opacity;
+    if (item.selected) {
+      opacity = 1;
     }
+
+    applyOpacity(pivot, opacity);
 
     planData.plan.add(pivot);
     planData.sceneGraph.layers[layer.id].items[item.id] = pivot;
@@ -490,6 +501,7 @@ function applyInteract(object, interactFunction) {
 // Apply opacity to children of an Object3D
 function applyOpacity(object, opacity) {
   object.traverse(function (child) {
+
     if (child instanceof Three.Mesh) {
       if (child.material instanceof Three.MultiMaterial) {
         child.material.materials.forEach(materialChild => {
@@ -499,6 +511,16 @@ function applyOpacity(object, opacity) {
           } else if (materialChild.opacity && materialChild.opacity > opacity) {
             materialChild.maxOpacity = materialChild.opacity;
             materialChild.opacity = opacity;
+          }
+        });
+      } else if (child.material instanceof Array) {
+        child.material.forEach(material => {
+          material.transparent = true;
+          if (material.maxOpacity) {
+            material.opacity = Math.min(material.maxOpacity, opacity);
+          } else if (material.opacity && material.opacity > opacity) {
+            material.maxOpacity = material.opacity;
+            material.opacity = opacity;
           }
         });
       } else {

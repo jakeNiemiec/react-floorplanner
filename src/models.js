@@ -311,6 +311,10 @@ export class State extends Record({
 
   viewer2D: new Map(),
 
+  mouse: new Map(),
+
+  zoom: 0,
+
   snapElements: new List(),
   activeSnapElement: null,
 
@@ -330,6 +334,10 @@ export class State extends Record({
       catalog: new Catalog(json.catalog || {}),
 
       viewer2D: new Map(json.viewer2D || {}),
+
+      mouse: new Map({ x: 0, y: 0 }),
+
+      zoom: 0,
 
       drawingSupport: new Map(json.drawingSupport || {}),
       draggingSupport: new Map(json.draggingSupport || {}),
