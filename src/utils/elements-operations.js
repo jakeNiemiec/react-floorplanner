@@ -211,3 +211,25 @@ export function addHoleToElements(elements, type, lineID, offset, catalog, prope
 
   return {elements, hole};
 }
+
+export function addItemToElements(elements, type, x, y, width, height, rotation, catalog) {
+  let item;
+
+  elements = elements.withMutations(elements => {
+    let itemID = IDBroker.acquireID();
+
+    item = catalog.factoryElement(type, {
+      id: itemID,
+      type,
+      height,
+      width,
+      x,
+      y,
+      rotation
+    });
+
+    elements.setIn(['items', itemID], item);
+  });
+
+  return {elements, item};
+}
