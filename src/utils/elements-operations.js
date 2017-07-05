@@ -65,9 +65,9 @@ export function removeLine(elements, lineID) {
   let line = elements.getIn(['lines', lineID]);
   elements = elements.withMutations(elements => {
     unselectElement(elements, 'lines', lineID);
-    line.holes.forEach(holeID => removeHole(elements, holeID)); // TODO: Implement removeHole
-    elements.deleteIn(['lines', line.id]);
-    line.vertices.forEach(vertexID => removeVertex(elements, vertexID, 'lines', line.id)); // TODO: Implement removeVertex
+    line.holes.forEach(holeID => removeHole(elements, holeID));
+    elements.deleteIn(['lines', line.id]); // TODO: We need this? (Check removeVertex)
+    line.vertices.forEach(vertexID => removeVertex(elements, vertexID, 'lines', line.id));
   });
 
   return {elements, line};
@@ -87,3 +87,17 @@ export function removeHole(elements, holeID) {
   return {elements, hole};
 }
 
+export function removeVertex(elements, vertexID, relatedPrototype, relatedID) {
+  let vertex = elements.vertices.get(vertexID);
+  vertex = vertex.update(relatedPrototype, related => {
+    let index = related.findIndex(ID => relatedID === ID);
+    return related.delete(index);
+  });
+
+  if (vertex.areas.size + vertex.lines.size === 0) {
+    elements = elements.deleteIn(['vertices', vertex.id]);
+  } else {
+    elements = elements.setIn(['vertices', vertex.id], vertex);
+  }
+  return {elements, vertex};
+}
