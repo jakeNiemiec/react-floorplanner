@@ -4,29 +4,6 @@ import {Vertex} from '../models';
 import IDBroker from './id-broker';
 import * as Geometry from './geometry';
 import calculateInnerCyles from './graph-inner-cycles';
-import {EPSILON} from "../constants";
-
-export function addLine(layer, type, x0, y0, x1, y1, catalog, properties = {}) {
-  let line;
-
-  layer = layer.withMutations(layer => {
-    let lineID = IDBroker.acquireID();
-
-    let v0, v1;
-    ({layer, vertex: v0} = addVertex(layer, x0, y0, 'lines', lineID));
-    ({layer, vertex: v1} = addVertex(layer, x1, y1, 'lines', lineID));
-
-    line = catalog.factoryElement(type, {
-      id: lineID,
-      vertices: new List([v0.id, v1.id]),
-      type
-    }, properties);
-
-    layer.setIn(['lines', lineID], line);
-  });
-
-  return {layer, line};
-}
 
 export function replaceLineVertex(layer, lineID, vertexIndex, x, y) {
   let line = layer.getIn(['lines', lineID]);
@@ -41,19 +18,6 @@ export function replaceLineVertex(layer, lineID, vertexIndex, x, y) {
     layer.setIn(['lines', lineID], line);
   }));
   return {layer, line, vertex};
-}
-
-export function removeLine(layer, lineID) {
-  let line = layer.getIn(['lines', lineID]);
-
-  layer = layer.withMutations(layer => {
-    unselect(layer, 'lines', lineID);
-    line.holes.forEach(holeID => removeHole(layer, holeID));
-    layer.deleteIn(['lines', line.id]);
-    line.vertices.forEach(vertexID => removeVertex(layer, vertexID, 'lines', line.id));
-  });
-
-  return {layer, line};
 }
 
 export function splitLine(layer, lineID, x, y, catalog) {
@@ -207,36 +171,6 @@ export function addLineAvoidingIntersections(layer, type, x0, y0, x1, y1, catalo
 }
 
 /** vertices features **/
-export function addVertex(layer, x, y, relatedPrototype, relatedID) {
-  let vertex = layer.vertices.find(vertex => Geometry.samePoints(vertex, {x, y}));
-  if (vertex) {
-    vertex = vertex.update(relatedPrototype, related => related.push(relatedID));
-  } else {
-    vertex = new Vertex({
-      id: IDBroker.acquireID(),
-      x, y,
-      [relatedPrototype]: new List([relatedID])
-    });
-  }
-  layer = layer.setIn(['vertices', vertex.id], vertex);
-  return {layer, vertex};
-}
-
-export function removeVertex(layer, vertexID, relatedPrototype, relatedID) {
-  let vertex = layer.vertices.get(vertexID);
-  vertex = vertex.update(relatedPrototype, related => {
-    let index = related.findIndex(ID => relatedID === ID);
-    return related.delete(index);
-  });
-
-  if (vertex.areas.size + vertex.lines.size === 0) {
-    layer = layer.deleteIn(['vertices', vertex.id]);
-  } else {
-    layer = layer.setIn(['vertices', vertex.id], vertex);
-  }
-  return {layer, vertex};
-}
-
 export function mergeEqualsVertices(layer, vertexID) {
 
   //1. find vertices to remove
@@ -377,43 +311,6 @@ export function unselectAll(layer) {
 }
 
 /** areas features **/
-export function addArea(layer, type, verticesCoords, catalog) {
-  let area;
-
-  layer = layer.withMutations(layer => {
-    let areaID = IDBroker.acquireID();
-
-    let vertices = [];
-    verticesCoords.forEach(({x, y}) => {
-      let {vertex} = addVertex(layer, x, y, 'areas', areaID);
-      vertices.push(vertex.id);
-    });
-
-    area = catalog.factoryElement(type, {
-      id: areaID,
-      type,
-      prototype: "areas",
-      vertices: new List(vertices)
-    });
-
-    layer.setIn(['areas', areaID], area);
-  });
-
-  return {layer, area};
-}
-
-export function removeArea(layer, areaID) {
-  let area = layer.getIn(['areas', areaID]);
-
-  layer = layer.withMutations(layer => {
-    unselect(layer, 'areas', areaID);
-    layer.deleteIn(['areas', area.id]);
-    area.vertices.forEach(vertexID => removeVertex(layer, vertexID, 'areas', area.id));
-  });
-
-  return {layer, area};
-}
-
 const sameSet = (set1, set2) => set1.size == set2.size && set1.isSuperset(set2) && set1.isSubset(set2);
 
 export function detectAndUpdateAreas(layer, catalog) {
@@ -452,7 +349,7 @@ export function detectAndUpdateAreas(layer, catalog) {
     innerCyclesByVerticesID.forEach(cycle => {
       let areaInUse = layer.areas.some(area => sameSet(area.vertices, cycle));
       if (!areaInUse) {
-        let areaVerticesCoords = cycle.map(vertexId => layer.vertices.get(vertexId) );
+        let areaVerticesCoords = cycle.map(vertexId => layer.vertices.get(vertexId));
         addArea(layer, 'area', areaVerticesCoords, catalog)
       }
     });
@@ -460,72 +357,3 @@ export function detectAndUpdateAreas(layer, catalog) {
 
   return {layer};
 }
-
-/** holes features **/
-export function addHole(layer, type, lineID, offset, catalog, properties = {}) {
-  let hole;
-
-  layer = layer.withMutations(layer => {
-    let holeID = IDBroker.acquireID();
-
-    hole = catalog.factoryElement(type, {
-      id: holeID,
-      type,
-      offset,
-      line: lineID
-    }, properties);
-
-    layer.setIn(['holes', holeID], hole);
-    layer.updateIn(['lines', lineID, 'holes'], holes => holes.push(holeID));
-  });
-
-  return {layer, hole};
-}
-
-export function removeHole(layer, holeID) {
-  let hole = layer.getIn(['holes', holeID]);
-  layer = layer.withMutations(layer => {
-    unselect(layer, 'holes', holeID);
-    layer.deleteIn(['holes', hole.id]);
-    layer.updateIn(['lines', hole.line, 'holes'], holes => {
-      let index = holes.findIndex(ID => holeID === ID);
-      return holes.remove(index);
-    });
-  });
-
-  return {layer, hole};
-}
-
-/** items features **/
-export function addItem(layer, type, x, y, width, height, rotation, catalog) {
-  let item;
-
-  layer = layer.withMutations(layer => {
-    let itemID = IDBroker.acquireID();
-
-    item = catalog.factoryElement(type, {
-      id: itemID,
-      type,
-      height,
-      width,
-      x,
-      y,
-      rotation
-    });
-
-    layer.setIn(['items', itemID], item);
-  });
-
-  return {layer, item};
-}
-
-export function removeItem(layer, itemID) {
-  let item = layer.getIn(['items', itemID]);
-  layer = layer.withMutations(layer => {
-    unselect(layer, 'items', itemID);
-    layer.deleteIn(['items', item.id]);
-  });
-
-  return {layer, item};
-}
-

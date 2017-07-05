@@ -131,6 +131,7 @@ export function removeItem(elements, itemID) {
 /*** ADD FUNCTIONS **/
 
 export function addVertexToElements(elements, x, y, relatedPrototype, relatedID) {
+  // TODO: I NEED TO FOUND AND MERGE THE VERTICES ON DIFFERENT LAYERS
   let vertex = elements.vertices.find(vertex => Geometry.samePoints(vertex, {x, y}));
   if (vertex) {
     vertex = vertex.update(relatedPrototype, related => related.push(relatedID));
