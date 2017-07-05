@@ -72,3 +72,18 @@ export function removeLine(elements, lineID) {
 
   return {elements, line};
 }
+
+export function removeHole(elements, holeID) {
+  let hole = elements.getIn(['holes', holeID]);
+  elements = elements.withMutations(elements => {
+    unselectElement(elements, 'holes', holeID);
+    elements.deleteIn(['holes', hole.id]);
+    elements.updateIn(['lines', hole.line, 'holes'], holes => {
+      let index = holes.findIndex(ID => holeID === ID);
+      return holes.remove(index);
+    });
+  });
+
+  return {elements, hole};
+}
+
