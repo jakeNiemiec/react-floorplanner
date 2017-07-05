@@ -162,3 +162,28 @@ export function addLineToElements(elements, type, x0, y0, x1, y1, catalog, prope
 
   return {elements, line};
 }
+
+export function addAreaToElements(elements, type, verticesCoords, catalog) {
+  let area;
+
+  elements = elements.withMutations(elements => {
+    let areaID = IDBroker.acquireID();
+
+    let vertices = [];
+    verticesCoords.forEach(({x, y}) => {
+      let {vertex} = addVertexToElements(elements, x, y, 'areas', areaID);
+      vertices.push(vertex.id);
+    });
+
+    area = catalog.factoryElement(type, {
+      id: areaID,
+      type,
+      prototype: "areas",
+      vertices: new List(vertices)
+    });
+
+    elements.setIn(['areas', areaID], area);
+  });
+
+  return {elements, area};
+}
