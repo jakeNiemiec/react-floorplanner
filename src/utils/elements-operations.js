@@ -1,4 +1,6 @@
-import {ElementsSet} from '../models';
+import {ElementsSet, Vertex} from '../models';
+import {IDBroker} from "./id-broker";
+import * as Geometry from './geometry';
 
 export function unselectAllElements(elements) {
   return elements.withMutations(elements => {
@@ -100,4 +102,63 @@ export function removeVertex(elements, vertexID, relatedPrototype, relatedID) {
     elements = elements.setIn(['vertices', vertex.id], vertex);
   }
   return {elements, vertex};
+}
+
+export function removeArea(elements, areaID) {
+  let area = elements.getIn(['areas', areaID]);
+
+  elements = elements.withMutations(elements => {
+    unselectElement(elements, 'areas', areaID);
+    elements.deleteIn(['areas', area.id]); // TODO: We need this? (Check removeVertex)
+    area.vertices.forEach(vertexID => removeVertex(elements, vertexID, 'areas', area.id));
+  });
+
+  return {elements, area};
+}
+
+export function removeItem(elements, itemID) {
+  let item = elements.getIn(['items', itemID]);
+  elements = elements.withMutations(elements => {
+    unselect(elements, 'items', itemID);
+    elements.deleteIn(['items', item.id]);
+  });
+
+  return {elements, item};
+}
+
+export function addVertexToElements(elements, x, y, relatedPrototype, relatedID) {
+  let vertex = elements.vertices.find(vertex => Geometry.samePoints(vertex, {x, y}));
+  if (vertex) {
+    vertex = vertex.update(relatedPrototype, related => related.push(relatedID));
+  } else {
+    vertex = new Vertex({
+      id: IDBroker.acquireID(),
+      x, y,
+      [relatedPrototype]: new List([relatedID])
+    });
+  }
+  elements = elements.setIn(['vertices', vertex.id], vertex);
+  return {elements, vertex};
+}
+
+export function addLineToElements(elements, type, x0, y0, x1, y1, catalog, properties = {}) {
+  let line;
+
+  elements = elements.withMutations(elements => {
+    let lineID = IDBroker.acquireID();
+
+    let v0, v1;
+    ({elements, vertex: v0} = addVertexToElements(elements, x0, y0, 'lines', lineID));
+    ({elements, vertex: v1} = addVertexToElements(elements, x1, y1, 'lines', lineID));
+
+    line = catalog.factoryElement(type, {
+      id: lineID,
+      vertices: new List([v0.id, v1.id]),
+      type
+    }, properties);
+
+    elements.setIn(['lines', lineID], line);
+  });
+
+  return {elements, line};
 }
