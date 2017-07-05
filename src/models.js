@@ -1,5 +1,7 @@
 import {Record, List, Map, fromJS} from 'immutable';
 import {GROUP_LAYER, MODE_IDLE} from './constants';
+import {MODE_IDLE} from './constants';
+import {SNAP_MASK} from './utils/snap';
 
 let safeLoadMapList = (mapList, Model, defaultMap) => {
   return mapList
@@ -315,6 +317,8 @@ export class State extends Record({
 
   zoom: 0,
 
+  snapMask: SNAP_MASK,
+
   snapElements: new List(),
   activeSnapElement: null,
 
@@ -338,6 +342,8 @@ export class State extends Record({
       mouse: new Map({ x: 0, y: 0 }),
 
       zoom: 0,
+
+      snapMask: SNAP_MASK,
 
       drawingSupport: new Map(json.drawingSupport || {}),
       draggingSupport: new Map(json.draggingSupport || {}),
