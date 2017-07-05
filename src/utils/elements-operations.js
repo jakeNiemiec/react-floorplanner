@@ -62,6 +62,8 @@ function unselectElement(elements, prototype, ID) {
   elements.setIn([prototype, ID, 'selected'], selected);
 }
 
+/*** REMOVE FUNCTIONS **/
+
 export function removeLine(elements, lineID) {
 
   let line = elements.getIn(['lines', lineID]);
@@ -126,6 +128,8 @@ export function removeItem(elements, itemID) {
   return {elements, item};
 }
 
+/*** ADD FUNCTIONS **/
+
 export function addVertexToElements(elements, x, y, relatedPrototype, relatedID) {
   let vertex = elements.vertices.find(vertex => Geometry.samePoints(vertex, {x, y}));
   if (vertex) {
@@ -186,4 +190,24 @@ export function addAreaToElements(elements, type, verticesCoords, catalog) {
   });
 
   return {elements, area};
+}
+
+export function addHoleToElements(elements, type, lineID, offset, catalog, properties = {}) {
+  let hole;
+
+  elements = elements.withMutations(elements => {
+    let holeID = IDBroker.acquireID();
+
+    hole = catalog.factoryElement(type, {
+      id: holeID,
+      type,
+      offset,
+      line: lineID
+    }, properties);
+
+    elements.setIn(['holes', holeID], hole);
+    elements.updateIn(['lines', lineID, 'holes'], holes => holes.push(holeID));
+  });
+
+  return {elements, hole};
 }
