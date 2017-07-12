@@ -430,3 +430,71 @@ export function replaceLineVertex(elements, lineID, vertexIndex, x, y) {
   });
   return {elements, line, vertex};
 }
+
+/** Set Properties And Attributes **/
+function opSetProperties(elements, prototype, ID, properties) {
+  properties = fromJS(properties);
+  elements.mergeIn([prototype, ID, 'properties'], properties);
+}
+
+function opSetItemsAttributes(elements, prototype, ID, itemsAttributes) {
+  itemsAttributes = fromJS(itemsAttributes);
+  elements.mergeIn([prototype, ID], itemsAttributes);
+}
+
+function opSetLinesAttributes(elements, prototype, ID, linesAttributes, catalog) {
+
+  let {vertexOne, vertexTwo} = linesAttributes.toJS();
+
+  elements.withMutations(elements => {
+
+    elements
+      .mergeIn(['vertices', vertexOne.id], {x: vertexOne.x, y: vertexOne.y})
+      .mergeIn(['vertices', vertexTwo.id], {x: vertexTwo.x, y: vertexTwo.y})
+      .mergeDeepIn([prototype, ID, 'misc'], new Map({'_unitLength': linesAttributes.get('lineLength').get('_unit')}));
+
+    mergeEqualsVertices(elements, vertexOne.id); // TODO: FIX THIS BUG!!!
+    //check if second vertex has different coordinates than the first
+    if (vertexOne.x !== vertexTwo.x && vertexOne.y !== vertexTwo.y) mergeEqualsVertices(elements, vertexTwo.id);
+
+  });
+
+  detectAndUpdateAreas(elements, catalog); // TODO: FIX THIS BUG!!!
+}
+
+function opSetHolesAttributes(elements, prototype, ID, holesAttributes) {
+
+  let offset = holesAttributes.get('offset');
+
+  let misc = new Map({
+    _unitA: holesAttributes.get('offsetA').get('_unit'),
+    _unitB: holesAttributes.get('offsetB').get('_unit')
+  });
+
+  elements.mergeDeepIn([prototype, ID], new Map({
+    offset,
+    misc
+  }));
+}
+
+
+export function setPropertiesOnSelected(elements, properties) {
+  return elements.withMutations(layer => {
+    let selected = layer.selected;
+    selected.lines.forEach(lineID => opSetProperties(layer, 'lines', lineID, properties));
+    selected.holes.forEach(holeID => opSetProperties(layer, 'holes', holeID, properties));
+    selected.areas.forEach(areaID => opSetProperties(layer, 'areas', areaID, properties));
+    selected.items.forEach(itemID => opSetProperties(layer, 'items', itemID, properties));
+  });
+}
+
+export function setAttributesOnSelected(elements, attributes, catalog) {
+  return elements.withMutations(layer => {
+    let selected = layer.selected;
+    selected.lines.forEach(lineID => opSetLinesAttributes(layer, 'lines', lineID, attributes, catalog));
+    selected.holes.forEach(holeID => opSetHolesAttributes(layer, 'holes', holeID, attributes, catalog));
+    selected.items.forEach(itemID => opSetItemsAttributes(layer, 'items', itemID, attributes, catalog));
+    //selected.areas.forEach(areaID => opSetItemsAttributes(elements, 'areas', areaID, attributes, catalog));
+  });
+}
+
