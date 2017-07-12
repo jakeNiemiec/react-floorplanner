@@ -279,8 +279,8 @@ export function addLinesFromPoints(elements, type, points, catalog, properties, 
     elements = elements.withMutations(elements => {
       pointsPair.forEach(([{x: x1, y: y1}, {x: x2, y: y2}]) => {
 
-        let {elements, vertex0} = addVertexToElements(elements, x1, y1, 'line', "-1");
-        let {elements, vertex1} = addVertexToElements(elements, x1, y1, 'line', "-1");
+        let {elements, vertex0} = addVertexToElements(elements, x1, y1);
+        let {elements, vertex1} = addVertexToElements(elements, x1, y1);
 
         let {line} = addLineToElements(elements, type, vertex0, vertex1, catalog, properties);
         if (holes) {
