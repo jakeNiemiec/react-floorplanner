@@ -346,3 +346,28 @@ export function addItemToElements(elements, type, x, y, width, height, rotation,
 
   return {elements, item};
 }
+
+/**
+ * Replace a vertex inside a line element
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param lineID {String} The id of the line we want to update
+ * @param vertexIndex {int} The position of the vertex in the line.vertices list
+ * @param x {int} The x-coordinate of the new vertex
+ * @param y {int} The y-coordinate of the new vertex
+ * @return {{elements: ElementsSet, line: Line, vertex: Vertex}} Returns the updated ElementsSet and the
+ * updated line and vertex
+ */
+export function replaceLineVertex(elements, lineID, vertexIndex, x, y) {
+  let line = elements.getIn(['lines', lineID]);
+  let vertex;
+
+  elements = elements.withMutations(elements => {
+    let vertexID = line.vertices.get(vertexIndex);
+    unselectElement(elements, 'vertices', vertexID);
+    removeVertex(elements, vertexID, 'lines', line.id);
+    ({elements, vertex} = addVertexToElements(elements, x, y, 'lines', line.id));
+    line = line.setIn(['vertices', vertexIndex], vertex.id);
+    elements.setIn(['lines', lineID], line);
+  });
+  return {elements, line, vertex};
+}
