@@ -2,6 +2,11 @@ import {ElementsSet, Vertex} from '../models';
 import {IDBroker} from "./id-broker";
 import * as Geometry from './geometry';
 
+/**
+ * Unselect all elements inside the ElementsSet
+ * @param elements {ElementsSet} the ElementsSet of the application
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 export function unselectAllElements(elements) {
   return elements.withMutations(elements => {
     unselectAllVertices(elements);
@@ -14,6 +19,11 @@ export function unselectAllElements(elements) {
 
 }
 
+/**
+ * Unselect all vertices inside the ElementsSet
+ * @param elements {ElementsSet} the current ElementsSet
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 export function unselectAllVertices(elements) {
   return elements.withMutations(elements => {
     elements.vertices.forEach(vertex => {
@@ -22,6 +32,11 @@ export function unselectAllVertices(elements) {
   });
 }
 
+/**
+ * Unselect all line inside the ElementsSet
+ * @param elements {ElementsSet} the current ElementsSet
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 export function unselectAllLines(elements) {
   return elements.withMutations(elements => {
     elements.lines.forEach(line => {
@@ -30,6 +45,11 @@ export function unselectAllLines(elements) {
   });
 }
 
+/**
+ * Unselect all holes inside the ElementsSet
+ * @param elements {ElementsSet} the current ElementsSet
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 export function unselectAllHoles(elements) {
   return elements.withMutations(elements => {
     elements.holes.forEach(hole => {
@@ -38,6 +58,11 @@ export function unselectAllHoles(elements) {
   });
 }
 
+/**
+ * Unselect all areas inside the ElementsSet
+ * @param elements {ElementsSet} the current ElementsSet
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 export function unselectAllAreas(elements) {
   return elements.withMutations(elements => {
     elements.areas.forEach(area => {
@@ -46,6 +71,11 @@ export function unselectAllAreas(elements) {
   });
 }
 
+/**
+ * Unselect all items inside the ElementsSet
+ * @param elements {ElementsSet} the current ElementsSet
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 export function unselectAllItems(elements) {
   return elements.withMutations(elements => {
     elements.items.forEach(item => {
@@ -54,6 +84,13 @@ export function unselectAllItems(elements) {
   });
 }
 
+/**
+ * Unselect a generic element inside the ElementsSet
+ * @param elements {ElementsSet} the current ElementsSet
+ * @param prototype {String} the type of the element we want to unselect
+ * @param ID {String} The ID of the element we want to unselect
+ * @returns {ElementsSet} Returns the updated ElementsSet
+ */
 function unselectElement(elements, prototype, ID) {
   let ids = elements.getIn(['selected', prototype]);
   ids = ids.remove(ids.indexOf(ID));
@@ -64,6 +101,12 @@ function unselectElement(elements, prototype, ID) {
 
 /*** REMOVE FUNCTIONS **/
 
+/**
+ * Remove a line from the ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param lineID {String} the ID of the line we want to remove
+ * @return {{elements: ElementsSet, line: Line}} Returns the updated ElementsSet and the removed line
+ */
 export function removeLine(elements, lineID) {
 
   let line = elements.getIn(['lines', lineID]);
@@ -77,6 +120,12 @@ export function removeLine(elements, lineID) {
   return {elements, line};
 }
 
+/**
+ * Remove an hole from the ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param holeID {String} the ID of the hole we want to remove
+ * @return {{elements: ElementsSet, hole: Hole}} Returns the updated ElementsSet and the removed hole
+ */
 export function removeHole(elements, holeID) {
   let hole = elements.getIn(['holes', holeID]);
   elements = elements.withMutations(elements => {
@@ -91,6 +140,14 @@ export function removeHole(elements, holeID) {
   return {elements, hole};
 }
 
+/**
+ * Remove a vertex from the ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param vertexID {String} the ID of the vertex we want to remove
+ * @param relatedPrototype {String} The relatedPrototype which has asked to remove the vertex
+ * @param relatedID {String} The ID of the related object which has asked the vertex removal
+ * @return {{elements: ElementsSet, vertex: Vertex}} Returns the updated ElementsSet and the removed vertex
+ */
 export function removeVertex(elements, vertexID, relatedPrototype, relatedID) {
   let vertex = elements.vertices.get(vertexID);
   vertex = vertex.update(relatedPrototype, related => {
@@ -106,6 +163,12 @@ export function removeVertex(elements, vertexID, relatedPrototype, relatedID) {
   return {elements, vertex};
 }
 
+/**
+ * Remove an area from the ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param areaID {String} the ID of the area we want to remove
+ * @return {{elements: ElementsSet, area: Area}} Returns the updated ElementsSet and the removed area
+ */
 export function removeArea(elements, areaID) {
   let area = elements.getIn(['areas', areaID]);
 
@@ -118,6 +181,12 @@ export function removeArea(elements, areaID) {
   return {elements, area};
 }
 
+/**
+ * Remove an item from the ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param itemID {String} the ID of the item we want to remove
+ * @return {{elements: ElementsSet, item: Item}} Returns the updated ElementsSet and the removed item
+ */
 export function removeItem(elements, itemID) {
   let item = elements.getIn(['items', itemID]);
   elements = elements.withMutations(elements => {
@@ -130,8 +199,16 @@ export function removeItem(elements, itemID) {
 
 /*** ADD FUNCTIONS **/
 
+/**
+ * Add a new vertex to the ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param x {int} The x-coordinate for the vertex
+ * @param y {int} The y-coordinate for the vertex
+ * @param relatedPrototype {String} The type of element which has requested the vertex insertion
+ * @param relatedID {String} The ID of the element which has requested the vertex insertion
+ * @return {{elements: ElementsSet, vertex: Vertex}} Returns the updated ElementsSet and the added vertex
+ */
 export function addVertexToElements(elements, x, y, relatedPrototype, relatedID) {
-  // TODO: I NEED TO FOUND AND MERGE THE VERTICES ON DIFFERENT LAYERS
   let vertex = elements.vertices.find(vertex => Geometry.samePoints(vertex, {x, y}));
   if (vertex) {
     vertex = vertex.update(relatedPrototype, related => related.push(relatedID));
@@ -146,19 +223,25 @@ export function addVertexToElements(elements, x, y, relatedPrototype, relatedID)
   return {elements, vertex};
 }
 
-export function addLineToElements(elements, type, x0, y0, x1, y1, catalog, properties = {}) {
+/**
+ * Add a new line inside the elements set
+ * @param elements {ElementsSet} the elements set we want to update
+ * @param type {String} The line type
+ * @param vertex0 {Vertex} The first vertex of the line
+ * @param vertex1 {Vertex} The second vertex of the line
+ * @param catalog {Catalog} The catalog object used in the application
+ * @param properties {Object} The list of property values we want to add for the line (default is empty object)
+ * @returns {{elements: ElementsSet, line: Line}} Returns the updated elements set and the newly added line
+ */
+export function addLineToElements(elements, type, vertex0, vertex1, catalog, properties = {}) {
   let line;
 
   elements = elements.withMutations(elements => {
     let lineID = IDBroker.acquireID();
 
-    let v0, v1;
-    ({elements, vertex: v0} = addVertexToElements(elements, x0, y0, 'lines', lineID));
-    ({elements, vertex: v1} = addVertexToElements(elements, x1, y1, 'lines', lineID));
-
     line = catalog.factoryElement(type, {
       id: lineID,
-      vertices: new List([v0.id, v1.id]),
+      vertices: new List([vertex0.id, vertex1.id]),
       type
     }, properties);
 
@@ -168,6 +251,14 @@ export function addLineToElements(elements, type, x0, y0, x1, y1, catalog, prope
   return {elements, line};
 }
 
+/**
+ * Add a new area to the current ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param type {String} The type of the area
+ * @param verticesCoords {List} The coordinates of the area points
+ * @param catalog {Catalog} The current catalog
+ * @return {{elements: *, area: Area}} Returns the updated elements set and the newly added area
+ */
 export function addAreaToElements(elements, type, verticesCoords, catalog) {
   let area;
 
@@ -193,6 +284,15 @@ export function addAreaToElements(elements, type, verticesCoords, catalog) {
   return {elements, area};
 }
 
+/**
+ * Add a new hole to the current ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param type {String} The type of the hole
+ * @param lineID {String} The id of the line which has the hole
+ * @param offset {int} The offset of the hole
+ * @param catalog {Catalog} The current catalog
+ * @return {{elements: *, hole: Hole}} Returns the updated elements set and the newly added hole
+ */
 export function addHoleToElements(elements, type, lineID, offset, catalog, properties = {}) {
   let hole;
 
@@ -213,6 +313,18 @@ export function addHoleToElements(elements, type, lineID, offset, catalog, prope
   return {elements, hole};
 }
 
+/**
+ * Add a new item to the current ElementsSet
+ * @param elements {ElementsSet} The current ElementsSet
+ * @param type {String} The type of the item
+ * @param x {int} The x-coordinate of the center of the item
+ * @param y {int} The y-coordinate of the center of the item
+ * @param width {int} The width of the item bounding box
+ * @param height {int} The height of the item bounding box
+ * @param rotation {int} The rotation of the item bounding box
+ * @param catalog {Catalog} The current catalog
+ * @return {{elements: *, item: Hole}} Returns the updated elements set and the newly added hole
+ */
 export function addItemToElements(elements, type, x, y, width, height, rotation, catalog) {
   let item;
 
