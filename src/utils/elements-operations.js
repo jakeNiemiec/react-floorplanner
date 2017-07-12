@@ -1,5 +1,6 @@
 import {ElementsSet, Vertex} from '../models';
 import {IDBroker} from "./id-broker";
+import {List} from 'immutable';
 import * as Geometry from './geometry';
 
 /**
@@ -208,15 +209,14 @@ export function removeItem(elements, itemID) {
  * @param relatedID {String} The ID of the element which has requested the vertex insertion
  * @return {{elements: ElementsSet, vertex: Vertex}} Returns the updated ElementsSet and the added vertex
  */
-export function addVertexToElements(elements, x, y, relatedPrototype, relatedID) {
+export function addVertexToElements(elements, x, y) {
   let vertex = elements.vertices.find(vertex => Geometry.samePoints(vertex, {x, y}));
-  if (vertex) {
-    vertex = vertex.update(relatedPrototype, related => related.push(relatedID));
-  } else {
+  if (!vertex) {
     vertex = new Vertex({
       id: IDBroker.acquireID(),
       x, y,
-      [relatedPrototype]: new List([relatedID])
+      lines: new List(),
+      areas: new List()
     });
   }
   elements = elements.setIn(['vertices', vertex.id], vertex);
@@ -246,9 +246,67 @@ export function addLineToElements(elements, type, vertex0, vertex1, catalog, pro
     }, properties);
 
     elements.setIn(['lines', lineID], line);
+    elements.updateIn(['vertices', line.vertices.get(0).id, 'lines'], lines => lines.push(lineID));
+    elements.updateIn(['vertices', line.vertices.get(1).id, 'lines'], lines => lines.push(lineID));
   });
 
   return {elements, line};
+}
+
+/**
+ * Add new lines starting from points coordinates
+ * @param elements {ElementsSet} the current ElementsSet
+ * @param type {String} The type of the line to add
+ * @param points {Array} The list of points in the format [{x: val1x, y:val1y}, {x:val2x, y:val2y}]
+ * @param catalog {Catalog} The catalog of the application
+ * @param properties {Object} The properties we want to add to these lines
+ * @param holes {Array} The list of holes to add for the new lines with the following
+ * format [{hole: Hole, offsetPosition: {x,y}}]
+ * @return {{elements: ElementsSet, lines: List<Line>}} The updated ElementsSet and the list of added lines
+ */
+export function addLinesFromPoints(elements, type, points, catalog, properties, holes) {
+  points = new List(points)
+    .sort(({x: x1, y: y1}, {x: x2, y: y2}) => {
+      return x1 === x2 ? y1 - y2 : x1 - x2;
+    });
+
+  let pointsPair = points.zip(points.skip(1))
+    .filterNot(([{x: x1, y: y1}, {x: x2, y: y2}]) => {
+      return x1 === x2 && y1 === y2;
+    });
+
+  let lines = (new List()).withMutations(lines => {
+    elements = elements.withMutations(elements => {
+      pointsPair.forEach(([{x: x1, y: y1}, {x: x2, y: y2}]) => {
+
+        let {elements, vertex0} = addVertexToElements(elements, x1, y1, 'line', "-1");
+        let {elements, vertex1} = addVertexToElements(elements, x1, y1, 'line', "-1");
+
+        let {line} = addLineToElements(elements, type, vertex0, vertex1, catalog, properties);
+        if (holes) {
+          holes.forEach(holeWithOffsetPoint => {
+
+            let {x: xp, y: yp} = holeWithOffsetPoint.offsetPosition;
+
+            if (Geometry.isPointOnLineSegment(x1, y1, x2, y2, xp, yp)) {
+
+              let newOffset = Geometry.pointPositionOnLineSegment(x1, y1, x2, y2, xp, yp);
+
+              if (newOffset >= 0 && newOffset <= 1) {
+
+                addHoleToElements(elements, holeWithOffsetPoint.hole.type, line.id, newOffset, catalog,
+                  holeWithOffsetPoint.hole.properties);
+              }
+            }
+          });
+        }
+
+        lines.push(line);
+      });
+    });
+  });
+
+  return {elements, lines};
 }
 
 /**
@@ -267,7 +325,8 @@ export function addAreaToElements(elements, type, verticesCoords, catalog) {
 
     let vertices = [];
     verticesCoords.forEach(({x, y}) => {
-      let {vertex} = addVertexToElements(elements, x, y, 'areas', areaID);
+      let {vertex} = addVertexToElements(elements, x, y);
+      elements.updateIn(['vertices', vertex.id, 'areas'], areas => areas.push(areaID));
       vertices.push(vertex.id);
     });
 

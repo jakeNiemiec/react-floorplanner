@@ -1,24 +1,6 @@
-/** lines features **/
 import {Map, List, fromJS} from 'immutable';
-import {Vertex} from '../models';
-import IDBroker from './id-broker';
 import * as Geometry from './geometry';
 import calculateInnerCyles from './graph-inner-cycles';
-
-export function replaceLineVertex(layer, lineID, vertexIndex, x, y) {
-  let line = layer.getIn(['lines', lineID]);
-  let vertex;
-
-  layer = layer.withMutations(layer => layer.withMutations(layer => {
-    let vertexID = line.vertices.get(vertexIndex);
-    unselect(layer, 'vertices', vertexID);
-    removeVertex(layer, vertexID, 'lines', line.id);
-    ({layer, vertex} = addVertex(layer, x, y, 'lines', line.id));
-    line = line.setIn(['vertices', vertexIndex], vertex.id);
-    layer.setIn(['lines', lineID], line);
-  }));
-  return {layer, line, vertex};
-}
 
 export function splitLine(layer, lineID, x, y, catalog) {
   let line0, line1;
@@ -63,47 +45,6 @@ export function splitLine(layer, lineID, x, y, catalog) {
   });
 
   return {layer, lines: new List([line0, line1])};
-}
-
-export function addLinesFromPoints(layer, type, points, catalog, properties, holes) {
-  points = new List(points)
-    .sort(({x: x1, y: y1}, {x: x2, y: y2}) => {
-      return x1 === x2 ? y1 - y2 : x1 - x2;
-    });
-
-  let pointsPair = points.zip(points.skip(1))
-    .filterNot(([{x: x1, y: y1}, {x: x2, y: y2}]) => {
-      return x1 === x2 && y1 === y2;
-    });
-
-  let lines = (new List()).withMutations(lines => {
-    layer = layer.withMutations(layer => {
-      pointsPair.forEach(([{x: x1, y: y1}, {x: x2, y: y2}]) => {
-        let {line} = addLine(layer, type, x1, y1, x2, y2, catalog, properties);
-        if (holes) {
-          holes.forEach(holeWithOffsetPoint => {
-
-            let {x: xp, y: yp} = holeWithOffsetPoint.offsetPosition;
-
-            if (Geometry.isPointOnLineSegment(x1, y1, x2, y2, xp, yp)) {
-
-              let newOffset = Geometry.pointPositionOnLineSegment(x1, y1, x2, y2, xp, yp);
-
-              if (newOffset >= 0 && newOffset <= 1) {
-
-                addHole(layer, holeWithOffsetPoint.hole.type, line.id, newOffset, catalog,
-                  holeWithOffsetPoint.hole.properties);
-              }
-            }
-          });
-        }
-
-        lines.push(line);
-      });
-    });
-  });
-
-  return {layer, lines};
 }
 
 export function addLineAvoidingIntersections(layer, type, x0, y0, x1, y1, catalog, oldProperties, oldHoles) {
@@ -257,7 +198,7 @@ function opSetLinesAttributes(layer, prototype, ID, linesAttributes, catalog) {
 
     mergeEqualsVertices(layer, vertexOne.id);
     //check if second vertex has different coordinates than the first
-    if (vertexOne.x != vertexTwo.x && vertexOne.y != vertexTwo.y) mergeEqualsVertices(layer, vertexTwo.id);
+    if (vertexOne.x !== vertexTwo.x && vertexOne.y !== vertexTwo.y) mergeEqualsVertices(layer, vertexTwo.id);
 
   });
 
@@ -311,7 +252,7 @@ export function unselectAll(layer) {
 }
 
 /** areas features **/
-const sameSet = (set1, set2) => set1.size == set2.size && set1.isSuperset(set2) && set1.isSubset(set2);
+const sameSet = (set1, set2) => set1.size === set2.size && set1.isSuperset(set2) && set1.isSubset(set2);
 
 export function detectAndUpdateAreas(layer, catalog) {
 
