@@ -14,19 +14,19 @@ import {
   reducer as PlannerReducer,
   ReactPlanner,
   Plugins as PlannerPlugins,
-} from '../../index'; //react-planner
+} from '../../index'; //react-floorplanner
 
 
 //define state
 let AppState = Map({
-  'react-planner': new PlannerModels.State()
+  'react-floorplanner': new PlannerModels.State()
 });
 
 
 //define reducer
 let reducer = (state, action) => {
   state = state || AppState;
-  state = state.update('react-planner', plannerState => PlannerReducer(plannerState, action));
+  state = state.update('react-floorplanner', plannerState => PlannerReducer(plannerState, action));
   return state;
 };
 
@@ -35,7 +35,7 @@ let reducer = (state, action) => {
 let store = createStore(reducer, null, window.devToolsExtension ? window.devToolsExtension() : f => f);
 let plugins = [
   PlannerPlugins.Keyboard(),
-  PlannerPlugins.Autosave('react-planner_v0'),
+  PlannerPlugins.Autosave('react-floorplanner_v0'),
   PlannerPlugins.ConsoleDebugger(),
 ];
 
@@ -50,7 +50,7 @@ ReactDOM.render(
       <ContainerDimensions>
         {({width, height}) =>
           <ReactPlanner catalog={MyCatalog} width={width} height={height} plugins={plugins}
-                        toolbarButtons={toolbarButtons} stateExtractor={state => state.get('react-planner')}
+                        toolbarButtons={toolbarButtons} stateExtractor={state => state.get('react-floorplanner')}
           />
         }
       </ContainerDimensions>
